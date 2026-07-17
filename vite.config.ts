@@ -25,7 +25,7 @@ export default defineConfig(async ({ mode }) => {
               const username = env.VITE_GOWA_USERNAME
               const password = env.VITE_GOWA_PASSWORD
               proxyReq.setHeader('Authorization', `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`)
-              proxyReq.setHeader('X-Device-Id', `6285111528585@s.whatsapp.net`)
+              proxyReq.setHeader('X-Device-Id', `085111528585`)
             })
           }
         },
@@ -38,7 +38,7 @@ export default defineConfig(async ({ mode }) => {
               const username = env.VITE_GOWA_USERNAME
               const password = env.VITE_GOWA_PASSWORD
               proxyReq.setHeader('Authorization', `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`)
-              proxyReq.setHeader('X-Device-Id', `6285111528585@s.whatsapp.net`)
+              proxyReq.setHeader('X-Device-Id', `085111528585`)
             })
           }
         },
