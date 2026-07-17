@@ -41,7 +41,7 @@ export default defineComponent({
         <div class="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
           <div class="mb-5 flex items-center justify-between">
             <div>
-              <h3 class="text-xl font-semibold">{{ selectedLocation?.location || 'Location detail' }}</h3>
+              <h3 class="text-xl font-semibold capitalize">{{ selectedLocation?.location || 'Location detail' }}</h3>
               <p class="text-sm text-gray-500">{{ selectedLocation?.description || 'No description' }}</p>
             </div><button type="button" class="text-2xl text-gray-400 hover:text-gray-900" aria-label="Tutup"
               @click="dialogOpen = false">&times;</button>
@@ -62,7 +62,7 @@ export default defineComponent({
                   class="border-b border-gray-100">
                   <td class="px-3 py-3">{{ branch.name }}</td>
                   <td class="px-3 py-3">{{ branch.code }}</td>
-                  <td class="px-3 py-3">{{ branch.city || '-' }}</td>
+                  <td class="px-3 py-3 capitalize">{{ branch.city || '-' }}</td>
                   <td class="px-3 py-3"><span :class="branch.isActive ? 'text-green-600' : 'text-gray-400'">{{
                     branch.isActive ? 'Active' : 'Inactive' }}</span></td>
                 </tr>
@@ -87,7 +87,7 @@ export default defineComponent({
           </thead>
           <tbody>
             <tr v-for="item in locations" :key="item.idLocation" class="border-b border-gray-100">
-              <td class="px-3 py-3">{{ item.location }}</td>
+              <td class="px-3 py-3 capitalize">{{ item.location }}</td>
               <td class="px-3 py-3">{{ item.description || '-' }}</td>
               <td class="px-3 py-3"><button title="View branches" @click="showDetail(item)">
                   <Eye :size="15" />

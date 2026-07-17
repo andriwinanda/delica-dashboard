@@ -15,34 +15,7 @@ export default defineConfig(async ({ mode }) => {
       }
     },
     server: {
-      proxy: {
-        '/api/chat-list': {
-          target: env.VITE_GOWA_BASE_URL || 'https://gowa-abi8zeomv0pl.cgk-pro.sumopod.my.id',
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/api\/chat-list/, '/chats'),
-          configure: (proxy: any) => {
-            proxy.on('proxyReq', (proxyReq: any) => {
-              const username = env.VITE_GOWA_USERNAME
-              const password = env.VITE_GOWA_PASSWORD
-              proxyReq.setHeader('Authorization', `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`)
-              proxyReq.setHeader('X-Device-Id', `085111528585`)
-            })
-          }
-        },
-        '/api/chat-detail': {
-          target: env.VITE_GOWA_BASE_URL,
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/api\/chat-detail/, '/chat'),
-          configure: (proxy: any) => {
-            proxy.on('proxyReq', (proxyReq: any) => {
-              const username = env.VITE_GOWA_USERNAME
-              const password = env.VITE_GOWA_PASSWORD
-              proxyReq.setHeader('Authorization', `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`)
-              proxyReq.setHeader('X-Device-Id', `085111528585`)
-            })
-          }
-        },
-      }
+      proxy: {}
     }
   }
 })

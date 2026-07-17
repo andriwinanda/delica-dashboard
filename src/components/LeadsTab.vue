@@ -17,15 +17,44 @@ import moment from 'moment'
 
 type LeadStatus = 'new' | 'contacted' | 'closed'
 
+interface PeriodMonth {
+  value: number
+  label: string
+}
+
 interface Lead {
   id: number | string
   name: string
   phone: string
   score: number
   label: string
-  status?: LeadStatus | string
+  status?: LeadStatus
   branch?: string
+  message?: string
+  source?: string
+  updatedAt?: string
 }
+
+interface LeadsPagination {
+  page: number
+  limit: number
+  total: number
+  pages: number
+}
+
+interface StatusState extends LeadsPagination {
+  loading: boolean
+  hasMore: boolean
+}
+
+const createStatusState = (): StatusState => ({
+  page: 0,
+  limit: 20,
+  total: 0,
+  pages: 0,
+  loading: false,
+  hasMore: true
+})
 
 export default defineComponent({
   name: 'LeadsTab',
@@ -45,20 +74,28 @@ export default defineComponent({
     return {
       moment,
       selectedBranch: 'all',
+      selectedMonth: Number(moment().format('M')),
+      selectedYear: Number(moment().format('YYYY')),
+      months: moment.months().map((label, index) => ({
+        value: index + 1,
+        label
+      })) as PeriodMonth[],
+      years: Array.from({ length: 10 }, (_, index) => moment().year() - index),
       branches: ['Jakarta', 'Medan', 'Surabaya'],
       statuses: [
         { key: 'new', label: 'New', description: 'Leads that need follow-up', icon: Clock3, color: 'blue' },
         { key: 'contacted', label: 'Contacted', description: 'Leads already contacted', icon: MessageCircle, color: 'amber' },
         { key: 'closed', label: 'Closed', description: 'Completed leads', icon: CheckCircle2, color: 'emerald' }
       ],
-      leads: [
-        { id: 1, name: 'John Doe', phone: '081234567890', score: 85, label: 'Hot Lead', status: 'new', branch: 'Jakarta' },
-        { id: 2, name: 'Jane Smith', phone: '081298765432', score: 72, label: 'Warm Lead', status: 'contacted', branch: 'Medan' },
-        { id: 3, name: 'Bob Johnson', phone: '085612345678', score: 45, label: 'Cold Lead', status: 'closed', branch: 'Surabaya' },
-        { id: 4, name: 'Dina Putri', phone: '081377788899', score: 90, label: 'Hot Lead', status: 'new', branch: 'Surabaya' },
-        { id: 5, name: 'Rizky Pratama', phone: '082211223344', score: 68, label: 'Warm Lead', status: 'contacted', branch: 'Jakarta' },
-        { id: 6, name: 'Siti Rahma', phone: '085266677788', score: 78, label: 'Warm Lead', status: 'closed', branch: 'Medan' }
-      ] as Lead[]
+      leads: [] as Lead[],
+      startDate: moment().startOf('month').format('YYYY-MM-DD'),
+      endDate: moment().endOf('month').format('YYYY-MM-DD'),
+      statusState: {
+        new: createStatusState(),
+        contacted: createStatusState(),
+        closed: createStatusState()
+      } as Record<LeadStatus, StatusState>,
+      requestVersion: 0
     }
   },
   computed: {
@@ -74,33 +111,88 @@ export default defineComponent({
     this.fetchLeads()
   },
   methods: {
-    async fetchLeads() {
-      const leadsUrl = getLeadsApiUrl()
+    async fetchLeads(reset = true) {
+      const activeRequestVersion = reset ? this.requestVersion + 1 : this.requestVersion
 
-      if (!leadsUrl) {
-        console.log('VITE_LEADS_API_URL not configured')
-        return
+      if (reset) {
+        this.requestVersion = activeRequestVersion
+        this.leads = []
+        ;(['new', 'contacted', 'closed'] as LeadStatus[]).forEach((status) => {
+          this.statusState[status] = createStatusState()
+        })
       }
+
+      await Promise.all(
+        (['new', 'contacted', 'closed'] as LeadStatus[]).map((status) =>
+          this.fetchLeadsByStatus(status, activeRequestVersion)
+        )
+      )
+    },
+    async fetchLeadsByStatus(status: LeadStatus, requestVersion = this.requestVersion) {
+      const leadsUrl = getLeadsApiUrl()
+      const state = this.statusState[status]
+
+      if (!leadsUrl || state.loading || !state.hasMore) return
+
+      const requestedPage = state.page + 1
+      state.loading = true
 
       try {
-        const response = await axiosHelper.get(leadsUrl)
-        this.leads = response.data.map((lead: Lead) => ({
+        const response = await axiosHelper.get(leadsUrl, {
+          params: {
+            status,
+            page: requestedPage,
+            limit: state.limit,
+            startDate: this.startDate,
+            endDate: this.endDate
+          }
+        })
+
+        if (requestVersion !== this.requestVersion) return
+
+        const rows: Lead[] = Array.isArray(response.data?.data) ? response.data.data : []
+        const pagination = response.data?.pagination
+        const incoming = rows.map((lead: Lead) => ({
           ...lead,
-          status: lead.status || 'new',
-          branch: lead.branch || 'Jakarta'
+          // The endpoint is queried per status; keep the lane canonical even
+          // when the backend omits or returns a different status value.
+          status
         }))
-        this.$emit('leadsUpdated', response.data)
+        const incomingIds = new Set(incoming.map((lead) => String(lead.id)))
+
+        this.leads = [
+          ...this.leads.filter((lead) => !incomingIds.has(String(lead.id))),
+          ...incoming
+        ]
+        state.page = Number(pagination?.page) || requestedPage
+        state.limit = Number(pagination?.limit) || state.limit
+        state.total = Number(pagination?.total) || 0
+        state.pages = Number(pagination?.pages) || 0
+        state.hasMore = state.pages > 0
+          ? state.page < state.pages
+          : incoming.length >= state.limit
+        this.$emit('leadsUpdated', this.leads)
       } catch (error: any) {
         console.error('Error fetching leads:', error)
-
-        // Handle CORS and other network errors
-        if (error.code === 'ERR_NETWORK' || error.message?.includes('CORS')) {
-          console.warn('Network error: Unable to connect to leads API. Using mock data.')
-          // Keep existing mock data for development
-        } else if (error.response) {
-          console.error(`API error: ${error.response.status} - ${error.response.statusText}`)
-        }
+      } finally {
+        if (requestVersion === this.requestVersion) state.loading = false
       }
+    },
+    applyPeriodFilter() {
+      const selectedDate = moment({
+        year: Number(this.selectedYear),
+        month: Number(this.selectedMonth) - 1
+      })
+
+      this.startDate = selectedDate.clone().startOf('month').format('YYYY-MM-DD')
+      this.endDate = selectedDate.clone().endOf('month').format('YYYY-MM-DD')
+      this.fetchLeads()
+    },
+    handleStatusScroll(status: LeadStatus, event: Event) {
+      const element = event.currentTarget as HTMLElement
+      const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight
+
+      if (distanceFromBottom <= 120) this.fetchLeadsByStatus(status)
     },
     getScoreColor(score: number) {
       if (score >= 80) return 'bg-emerald-100 text-emerald-700'
@@ -111,6 +203,11 @@ export default defineComponent({
       return this.filteredLeads.filter((lead: Lead) =>
         (lead.status || 'new').toLowerCase() === status
       )
+    },
+    getStatusTotal(status: LeadStatus) {
+      return this.selectedBranch === 'all'
+        ? this.statusState[status].total
+        : this.getLeadsByStatus(status).length
     },
     getStatusClasses(color: string) {
       const colors: Record<string, string> = {
@@ -135,6 +232,22 @@ export default defineComponent({
       </div>
       <div class="flex gap-2">
         <div class="!relative">
+          <select v-model.number="selectedMonth" @change="applyPeriodFilter"
+            class="w-full appearance-none px-3 py-3 pr-10 bg-white border border-black text-black rounded-md">
+            <option v-for="month in months" :key="month.value" :value="month.value">{{ month.label }}</option>
+          </select>
+          <ChevronDown :size="18" class="pointer-events-none !absolute right-3 top-1/2 -translate-y-1/2 text-black" />
+        </div>
+
+        <div class="!relative">
+          <select v-model.number="selectedYear" @change="applyPeriodFilter"
+            class="w-full appearance-none px-3 py-3 pr-10 bg-white border border-black text-black rounded-md">
+            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+          </select>
+          <ChevronDown :size="18" class="pointer-events-none !absolute right-3 top-1/2 -translate-y-1/2 text-black" />
+        </div>
+
+        <div class="!relative">
           <!-- <MapPin :size="15" class="pointer-events-none absolute left-3 -translate-y-1/2 text-gray-400" /> -->
           <select v-model="selectedBranch"
             class="w-full appearance-none px-3 py-3 pr-10 bg-white border border-black text-black rounded-md">
@@ -144,7 +257,7 @@ export default defineComponent({
           <ChevronDown :size="18" class="pointer-events-none !absolute right-3 top-1/2 -translate-y-1/2 text-black" />
         </div>
 
-        <button @click="fetchLeads" class="px-4 py-2 bg-black text-white rounded-md flex items-center gap-2">
+        <button @click="fetchLeads()" class="px-4 py-2 bg-black text-white rounded-md flex items-center gap-2">
           <RefreshCw :size="14" />
           Refresh
         </button>
@@ -171,11 +284,12 @@ export default defineComponent({
           </div>
           <span
             class="flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 text-xs font-semibold text-gray-700 shadow-sm">
-            {{ getLeadsByStatus(status.key).length }}
+            {{ getStatusTotal(status.key) }}
           </span>
         </div>
 
-        <div class="space-y-3 h-[500px] overflow-y-auto pr-2 scrollbar-thin">
+        <div class="space-y-3 h-[500px] overflow-y-auto pr-2 scrollbar-thin"
+          @scroll.passive="handleStatusScroll(status.key, $event)">
           <article v-for="lead in getLeadsByStatus(status.key)" :key="lead.id"
             class="rounded-md border border-gray-100 bg-white p-4 shadow-sm">
             <div class="mb-3 flex justify-between gap-3">
@@ -216,7 +330,13 @@ export default defineComponent({
             </div>
           </article>
 
-          <div v-if="getLeadsByStatus(status.key).length === 0"
+          <div v-if="statusState[status.key].loading"
+            class="flex items-center justify-center gap-2 py-4 text-xs text-gray-400">
+            <RefreshCw :size="14" class="animate-spin" />
+            Loading leads...
+          </div>
+
+          <div v-else-if="getLeadsByStatus(status.key).length === 0"
             class="flex min-h-32 flex-col items-center justify-center rounded-md bg-white/60 p-5 mt-5 text-center">
             <Users :size="22" class="mb-2 text-gray-300" />
             <p class="text-sm font-medium text-gray-500">No leads found</p>

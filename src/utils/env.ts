@@ -7,12 +7,9 @@ export const getEnvVars = () => {
 // External service URLs. GoWA must allow the deployed frontend origin via CORS.
 export const getWhatsAppWebhookUrl = () => '/api/whatsapp'
 export const getLeadsApiUrl = () => '/leads'
-export const getChatList = (offset = 0, limit = 10) =>
-  `${import.meta.env.VITE_GOWA_BASE_URL}/chats?offset=${offset}&limit=${limit}`
-export const getChatMessages = (chatId: string, offset = 0, limit = 20) =>
-  `${import.meta.env.VITE_GOWA_BASE_URL}/chat/${encodeURIComponent(chatId)}/messages?offset=${offset}&limit=${limit}`
+export const getChatList = (offset = 0, limit = 10) => `/gowa/chats?offset=${offset}&limit=${limit}`
+export const getChatMessages = (chatId: string, offset = 0, limit = 20) =>`/gowa/chat/${chatId}/messages?offset=${offset}&limit=${limit}`
 export const getGowaHeaders = () => ({
-  Authorization: `Basic ${btoa(`${import.meta.env.VITE_GOWA_USERNAME}:${import.meta.env.VITE_GOWA_PASSWORD}`)}`,
   'X-Device-Id': `085111528585`
 })
 export const getCustomersApiUrl = (id?: number | string) =>

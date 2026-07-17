@@ -72,16 +72,6 @@ export default defineComponent({
         { id: 'quotations', label: 'Quotations', icon: FileText },
         { id: 'branches', label: 'Branches', icon: Building2 },
         { id: 'locations', label: 'Locations', icon: MapPin }
-      ],
-      messages: [
-        { id: 1, recipient: '0512 3456 7890', content: 'Order confirmation sent successfully.', status: 'Delivered', time: 'Just now' },
-        { id: 2, recipient: '0812 9876 5432', content: 'Reminder sent to customer.', status: 'Sent', time: '12m ago' },
-        { id: 3, recipient: '0856 4321 6789', content: 'Payment link shared.', status: 'Pending', time: '24m ago' }
-      ],
-      leads: [
-        { id: 1, name: 'John Doe', phone: '081234567890', score: 85, label: 'Hot Lead', group: 'High Priority' },
-        { id: 2, name: 'Jane Smith', phone: '081298765432', score: 72, label: 'Warm Lead', group: 'Medium Priority' },
-        { id: 3, name: 'Bob Johnson', phone: '085612345678', score: 45, label: 'Cold Lead', group: 'Low Priority' }
       ]
     }
   },
@@ -91,39 +81,6 @@ export default defineComponent({
     }
   },
   methods: {
-    handleTriggerSync() {
-      this.isSyncing = true
-      setTimeout(() => {
-        this.isSyncing = false
-      }, 1200)
-    },
-    async fetchLeads() {
-      const leadsUrl = getLeadsApiUrl()
-
-      if (!leadsUrl) {
-        console.log('VITE_LEADS_API_URL not configured')
-        return
-      }
-
-      try {
-        const response = await axiosHelper.get(leadsUrl)
-        this.leads = response.data
-      } catch (error: any) {
-        console.error('Error fetching leads:', error)
-
-        if (error.code === 'ERR_NETWORK' || error.message?.includes('CORS')) {
-          console.warn('Network error: Unable to connect to leads API. Using mock data.')
-        } else if (error.response) {
-          console.error(`API error: ${error.response.status} - ${error.response.statusText}`)
-        }
-      }
-    },
-    handleMessageSent(message: any) {
-      this.messages.unshift(message)
-    },
-    handleLeadsUpdated(updatedLeads: any) {
-      this.leads = updatedLeads
-    },
     handleChangeTab(tab: string) {
       this.activeTab = tab
     },
@@ -131,9 +88,6 @@ export default defineComponent({
       clearAuthSession()
       this.$router.replace('/login')
     }
-  },
-  mounted() {
-    this.fetchLeads()
   }
 })
 </script>

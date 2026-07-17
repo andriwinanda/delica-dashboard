@@ -20,7 +20,7 @@
       </div>
 
       <div class="h-[400px] overflow-y-auto pr-2 scrollbar-thin" @scroll.passive="handleMessageScroll">
-        <div v-if="!selectedMessage && isLoading" v-for="value in 3">
+        <div v-if="!selectedMessage && isListLoading" v-for="value in 3">
           <div class="w-full h-20 rounded bg-gray-200 mb-2"></div>
         </div>
 
@@ -54,7 +54,7 @@
           </div>
 
         </div>
-        <p v-if="selectedMessage && isLoading" class="py-3 text-center text-xs text-gray-400">Loading more messages...
+        <p v-if="selectedMessage && isListLoading" class="py-3 text-center text-xs text-gray-400">Loading more messages...
         </p>
         <p v-else-if="!hasMore && messages.length" class="py-3 text-center text-xs text-gray-400">All messages loaded
         </p>
@@ -197,6 +197,7 @@ export default defineComponent({
   data() {
     return {
       isLoading: false,
+      isListLoading: false,
       messages: [],
       offset: 0,
       chatPageIndex: 1,
@@ -223,10 +224,10 @@ export default defineComponent({
   methods: {
 
     async fetchChatList(reset = false) {
-      if (this.isLoading || (!this.hasMore && !reset)) return
+      if (this.isListLoading || (!this.hasMore && !reset)) return
       if (reset) { this.offset = 0; this.chatPageIndex = 1; this.chatTotal = null; this.hasMore = true; this.messages = [] }
       if (this.chatTotal !== null && this.offset >= this.chatTotal) { this.hasMore = false; return }
-      this.isLoading = true
+      this.isListLoading = true
       const requestLimit = this.limit
       this.offset = this.limit * (this.chatPageIndex - 1)
       const leadsUrl = getChatList(this.offset, requestLimit)
@@ -237,7 +238,7 @@ export default defineComponent({
       }
 
       try {
-        const response = await axios.get(leadsUrl, { headers: getGowaHeaders() })
+        const response = await axiosHelper.get(leadsUrl, { headers: getGowaHeaders() })
         const payload = response.data?.results ?? response.data?.result ?? response.data
         const rows = Array.isArray(payload) ? payload : (payload?.data || payload?.items || payload?.chats || [])
         const pagination = payload?.pagination || response.data?.pagination
@@ -259,7 +260,7 @@ export default defineComponent({
       } catch (error: any) {
 
       }
-      this.isLoading = false
+      this.isListLoading = false
 
     },
     parseMessages(value: string) {
@@ -282,6 +283,7 @@ export default defineComponent({
     },
     async showDetailMessage(msg: any) {
       this.isLoading = false
+      this.isListLoading = false
       this.selectedMessage = msg
       this.detailMessages = []
       this.detailOffset = 0
@@ -301,7 +303,7 @@ export default defineComponent({
         const id = this.selectedMessage.jid || this.selectedMessage.id || this.selectedMessage.phone
         const requestLimit = this.detailLimit
         this.detailOffset = this.detailLimit * (this.detailPageIndex - 1)
-        const response = await axios.get(getChatMessages(id, this.detailOffset, requestLimit), { headers: getGowaHeaders() })
+        const response = await axiosHelper.get(getChatMessages(id, this.detailOffset, requestLimit), { headers: getGowaHeaders() })
         const results = response.data?.results ?? response.data?.result ?? response.data
         const rows = Array.isArray(results?.data) ? results.data : []
         if (rows.length === 0) {

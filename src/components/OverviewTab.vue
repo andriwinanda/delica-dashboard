@@ -127,23 +127,23 @@ export default defineComponent({
       try {
         const [kpiResponse, branchesResponse, productsResponse] = await Promise.all([
           axiosHelper.get(getDashboardKpiApiUrl()),
-          axiosHelper.get(getDashboardBranchesApiUrl()),
-          axiosHelper.get(getDashboardProductsApiUrl())
+          // axiosHelper.get(getDashboardBranchesApiUrl()),
+          // axiosHelper.get(getDashboardProductsApiUrl())
         ])
 
         const kpi = unwrap(kpiResponse.data)
         this.kpi = kpi && typeof kpi === 'object' && !Array.isArray(kpi) ? kpi as ApiRecord : {}
-        this.branchMetrics = asRecords(branchesResponse.data).map((branch, index) => ({
-          id: String(branch.id ?? branch.branchId ?? index),
-          name: textValue(branch, ['name', 'branchName', 'branch_name'], `Branch ${index + 1}`),
-          value: numberValue(branch, ['value', 'total', 'revenue', 'sales', 'count'])
-        }))
-        this.productMetrics = asRecords(productsResponse.data).map((product, index) => ({
-          id: String(product.id ?? product.productId ?? index),
-          name: textValue(product, ['name', 'productName', 'product_name'], `Product ${index + 1}`),
-          quantity: numberValue(product, ['quantity', 'qty', 'total', 'sold']),
-          revenue: numberValue(product, ['revenue', 'sales', 'amount', 'totalRevenue'])
-        }))
+        // this.branchMetrics = asRecords(branchesResponse.data).map((branch, index) => ({
+        //   id: String(branch.id ?? branch.branchId ?? index),
+        //   name: textValue(branch, ['name', 'branchName', 'branch_name'], `Branch ${index + 1}`),
+        //   value: numberValue(branch, ['value', 'total', 'revenue', 'sales', 'count'])
+        // }))
+        // this.productMetrics = asRecords(productsResponse.data).map((product, index) => ({
+        //   id: String(product.id ?? product.productId ?? index),
+        //   name: textValue(product, ['name', 'productName', 'product_name'], `Product ${index + 1}`),
+        //   quantity: numberValue(product, ['quantity', 'qty', 'total', 'sold']),
+        //   revenue: numberValue(product, ['revenue', 'sales', 'amount', 'totalRevenue'])
+        // }))
       } catch (error) {
         this.errorMessage = getApiErrorMessage(error, 'Unable to load dashboard data.')
       } finally {
@@ -172,7 +172,7 @@ export default defineComponent({
     <div class="flex items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-bold">Overview</h2>
-        <p class="text-sm text-gray-500">Live business performance from Delica API.</p>
+        <p class="text-sm text-gray-500">Live business performance from Delimitca API.</p>
         <p v-if="errorMessage" role="alert" class="mt-1 text-sm text-red-600">{{ errorMessage }}</p>
       </div>
       <button :disabled="isLoading"
