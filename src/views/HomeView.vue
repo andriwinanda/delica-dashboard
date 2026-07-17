@@ -7,7 +7,6 @@ import OverviewTab from '@/components/OverviewTab.vue'
 import WhatsAppTab from '@/components/WhatsAppTab.vue'
 import LeadsTab from '@/components/LeadsTab.vue'
 import SyncTab from '@/components/SyncTab.vue'
-import SettingsTab from '@/components/SettingsTab.vue'
 import BranchesTab from '@/components/BranchesTab.vue'
 import CustomerTab from '@/components/CustomerTab.vue'
 import QuotationTab from '@/components/QuotationTab.vue'
@@ -44,7 +43,6 @@ export default defineComponent({
     WhatsAppTab,
     LeadsTab,
     SyncTab,
-    SettingsTab,
     BranchesTab,
     CustomerTab,
     QuotationTab,
@@ -185,7 +183,6 @@ export default defineComponent({
           <WhatsAppTab v-else-if="activeTab === 'whatsapp'" />
           <LeadsTab v-else-if="activeTab === 'leads'" />
           <SyncTab v-else-if="activeTab === 'sync'" />
-          <SettingsTab v-else-if="activeTab === 'settings'" />
           <CustomerTab v-else-if="activeTab === 'customers'" />
           <QuotationTab v-else-if="activeTab === 'quotations'" />
           <BranchesTab v-else-if="activeTab === 'branches'" />

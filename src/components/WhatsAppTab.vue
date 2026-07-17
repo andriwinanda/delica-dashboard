@@ -221,65 +221,6 @@ export default defineComponent({
     this.fetchChatList()
   },
   methods: {
-    // async sendWhatsAppMessage() {
-    //   const whatsappUrl = getWhatsAppWebhookUrl()
-
-    //   if (!whatsappUrl || !this.form.phone || !this.form.message) {
-    //     alert('Please fill all fields and ensure VITE_WHATSAPP_WEBHOOK_URL is configured.')
-    //     return
-    //   }
-
-    //   try {
-    //     const response = await axios.post(whatsappUrl, {
-    //       phone: this.form.phone,
-    //       message: this.form.message
-    //     })
-
-    //     const newMessage = {
-    //       id: Date.now(),
-    //       recipient: this.form.phone,
-    //       content: this.form.message,
-    //       status: 'Sent',
-    //       time: 'Just now'
-    //     }
-
-    //     // this.$emit('messageSent', newMessage)
-    //     Object.assign(this.form, { phone: '', message: '' })
-    //     alert('Message sent successfully!')
-    //   } catch (error: any) {
-    //     console.error('Error sending message:', error)
-
-    //     // Handle CORS and other network errors
-    //     if (error.code === 'ERR_NETWORK' || error.message?.includes('CORS')) {
-    //       alert('Network error: Unable to connect to WhatsApp webhook. Please check your n8n instance and CORS configuration.')
-    //     } else if (error.response) {
-    //       alert(`Webhook error: ${error.response.status} - ${error.response.statusText}`)
-    //     } else {
-    //       alert('Failed to send message. Check console for details.')
-    //     }
-    //   }
-    // },
-
-    // async handleMessageTakeover(message: any) {
-    //   const takeoverUrl = getTakeoverWebhookUrl()
-
-    //   if (!takeoverUrl) {
-    //     console.log('VITE_TAKEOVER_WEBHOOK_URL not configured')
-    //     return
-    //   }
-
-    //   try {
-    //     const response = await axios.post(takeoverUrl, message)
-    //     console.log('Message takeover response:', response.data)
-    //   } catch (error: any) {
-    //     console.error('Error in message takeover:', error)
-
-    //     // Handle CORS and other network errors
-    //     if (error.code === 'ERR_NETWORK' || error.message?.includes('CORS')) {
-    //       console.warn('Network error: Unable to connect to takeover webhook.')
-    //     }
-    //   }
-    // },
 
     async fetchChatList(reset = false) {
       if (this.isLoading || (!this.hasMore && !reset)) return

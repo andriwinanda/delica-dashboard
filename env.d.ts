@@ -7,11 +7,10 @@ declare module '*.vue' {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_WHATSAPP_WEBHOOK_URL: string
-  readonly VITE_LEADS_API_URL: string
-  readonly VITE_TAKEOVER_WEBHOOK_URL: string
-  readonly VITE_LOGIN_API_URL: string
-  readonly VITE_API_BASE_URL?: string
+  readonly VITE_GOWA_USERNAME: string
+  readonly VITE_GOWA_PASSWORD: string
+  readonly VITE_GOWA_BASE_URL: string
+  readonly VITE_API_BASE_URL: string
 }
 
 interface ImportMeta {
