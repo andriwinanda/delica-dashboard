@@ -4,13 +4,17 @@ export const getEnvVars = () => {
   return stored ? JSON.parse(stored) : {}
 }
 
-// Use proxy URLs for CORS-free communication in development
+// External service URLs. GoWA must allow the deployed frontend origin via CORS.
 export const getWhatsAppWebhookUrl = () => '/api/whatsapp'
 export const getLeadsApiUrl = () => '/leads'
-// GoWA is accessed through the local proxy to avoid browser CORS restrictions.
-export const getChatList = (offset = 0, limit = 10) => `/api/chat-list?offset=${offset}&limit=${limit}`
+export const getChatList = (offset = 0, limit = 10) =>
+  `${import.meta.env.VITE_GOWA_BASE_URL}/chats?offset=${offset}&limit=${limit}`
 export const getChatMessages = (chatId: string, offset = 0, limit = 20) =>
-  `/api/chat-detail/${chatId}/messages?offset=${offset}&limit=${limit}`
+  `${import.meta.env.VITE_GOWA_BASE_URL}/chat/${encodeURIComponent(chatId)}/messages?offset=${offset}&limit=${limit}`
+export const getGowaHeaders = () => ({
+  Authorization: `Basic ${btoa(`${import.meta.env.VITE_GOWA_USERNAME}:${import.meta.env.VITE_GOWA_PASSWORD}`)}`,
+  'X-Device-Id': `085111528585`
+})
 export const getCustomersApiUrl = (id?: number | string) =>
   id === undefined ? '/customers' : `/customers/${id}`
 export const getQuotationsApiUrl = (id?: number | string) =>

@@ -177,7 +177,7 @@
 import { defineComponent } from 'vue'
 import axios from 'axios'
 import axiosHelper from '@/utils/axiosHelper'
-import { getWhatsAppWebhookUrl, getTakeoverWebhookUrl, getLeadsApiUrl, getChatList, getChatMessages } from '@/utils/env'
+import { getWhatsAppWebhookUrl, getTakeoverWebhookUrl, getLeadsApiUrl, getChatList, getChatMessages, getGowaHeaders } from '@/utils/env'
 import {
   ArrowRight,
   MessageSquare,
@@ -237,9 +237,7 @@ export default defineComponent({
       }
 
       try {
-        // Use a relative URL so Vite's /api/chats proxy handles GoWA and the
-        // browser never connects to the external GoWA origin directly.
-        const response = await axios.get(leadsUrl)
+        const response = await axios.get(leadsUrl, { headers: getGowaHeaders() })
         const payload = response.data?.results ?? response.data?.result ?? response.data
         const rows = Array.isArray(payload) ? payload : (payload?.data || payload?.items || payload?.chats || [])
         const pagination = payload?.pagination || response.data?.pagination
@@ -303,7 +301,7 @@ export default defineComponent({
         const id = this.selectedMessage.jid || this.selectedMessage.id || this.selectedMessage.phone
         const requestLimit = this.detailLimit
         this.detailOffset = this.detailLimit * (this.detailPageIndex - 1)
-        const response = await axios.get(getChatMessages(id, this.detailOffset, requestLimit))
+        const response = await axios.get(getChatMessages(id, this.detailOffset, requestLimit), { headers: getGowaHeaders() })
         const results = response.data?.results ?? response.data?.result ?? response.data
         const rows = Array.isArray(results?.data) ? results.data : []
         if (rows.length === 0) {
