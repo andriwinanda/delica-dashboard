@@ -17,7 +17,7 @@ export default defineConfig(async ({ mode }) => {
     server: {
       proxy: {
         '/api/chat-list': {
-          target: env.VITE_GOWA_BASE_URL,
+          target: env.VITE_GOWA_BASE_URL || 'https://gowa-abi8zeomv0pl.cgk-pro.sumopod.my.id',
           changeOrigin: true,
           rewrite: (path: string) => path.replace(/^\/api\/chat-list/, '/chats'),
           configure: (proxy: any) => {
