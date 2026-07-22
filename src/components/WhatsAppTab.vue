@@ -186,6 +186,13 @@ import {
 } from 'lucide-vue-next'
 import moment from 'moment';
 
+const HIDDEN_CHAT_NUMBERS = new Set([
+  '62895335202843',
+  '6281365569764'
+])
+
+const chatNumber = (chat: any) => String(chat?.jid || chat?.phone || chat?.id || '').replace(/\D/g, '')
+
 export default defineComponent({
   name: 'WhatsAppTab',
   components: {
@@ -242,11 +249,13 @@ export default defineComponent({
         const payload = response.data?.results ?? response.data?.result ?? response.data
         const rows = Array.isArray(payload) ? payload : (payload?.data || payload?.items || payload?.chats || [])
         const pagination = payload?.pagination || response.data?.pagination
-        const page = rows.map((lead: any) => ({
-          ...lead,
-          message: typeof lead.message === 'string' ? this.parseMessages(lead.message) : (lead.message || [])
-        }))
-        if (page.length === 0) {
+        const page = rows
+          .filter((lead: any) => !HIDDEN_CHAT_NUMBERS.has(chatNumber(lead)))
+          .map((lead: any) => ({
+            ...lead,
+            message: typeof lead.message === 'string' ? this.parseMessages(lead.message) : (lead.message || [])
+          }))
+        if (rows.length === 0) {
           this.hasMore = false
         } else {
           this.messages = [...this.messages, ...page]
@@ -255,12 +264,15 @@ export default defineComponent({
           this.chatPageIndex += 1
           this.offset = this.limit * (this.chatPageIndex - 1)
           this.hasMore = this.chatTotal !== null ? this.offset < this.chatTotal : page.length >= requestLimit
-          if (!this.selectedMessage) await this.showDetailMessage(this.messages[0])
+          if (!this.selectedMessage && this.messages.length) await this.showDetailMessage(this.messages[0])
         }
       } catch (error: any) {
 
       }
       this.isListLoading = false
+
+      // A page may contain only excluded chats; continue until a visible chat or the end.
+      if (!this.messages.length && this.hasMore) await this.fetchChatList()
 
     },
     parseMessages(value: string) {

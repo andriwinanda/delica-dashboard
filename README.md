@@ -15,12 +15,6 @@ A Vue 3 dashboard for managing WhatsApp messaging and lead scoring with n8n work
 
 Create a `.env` file in the project root with your n8n webhook URLs:
 
-```env
-# n8n Integration Environment Variables
-VITE_WHATSAPP_WEBHOOK_URL=https://your-n8n-instance.com/webhook/whatsapp
-VITE_LEADS_API_URL=https://your-n8n-instance.com/webhook/leads
-VITE_TAKEOVER_WEBHOOK_URL=https://your-n8n-instance.com/webhook/takeover
-```
 
 ### 2. CORS Configuration
 
