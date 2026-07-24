@@ -24,6 +24,7 @@ interface PeriodMonth {
 
 interface Lead {
   id: number | string
+  _id?: number | string
   name: string
   phone: string
   score: number
@@ -150,24 +151,35 @@ export default defineComponent({
 
         if (requestVersion !== this.requestVersion) return
 
-        const rows: Lead[] = Array.isArray(response.data?.data) ? response.data.data : []
-        const pagination = response.data?.pagination
-        const incoming = rows.map((lead: Lead) => ({
+        const root = response.data
+        const payload = root?.results ?? root?.result ?? root?.data ?? root
+        const rows: Lead[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : Array.isArray(payload?.leads)
+                ? payload.leads
+                : []
+        const pagination = payload?.pagination ?? payload?.meta ?? root?.pagination ?? root?.meta
+        const incoming = rows.map((lead: Lead, index: number) => ({
           ...lead,
+          id: lead.id ?? lead._id ?? `${status}-${lead.phone || index}`,
           // The endpoint is queried per status; keep the lane canonical even
           // when the backend omits or returns a different status value.
           status
         }))
-        const incomingIds = new Set(incoming.map((lead) => String(lead.id)))
+        const incomingIds = new Set(incoming.map((lead) => `${status}:${String(lead.id)}`))
 
         this.leads = [
-          ...this.leads.filter((lead) => !incomingIds.has(String(lead.id))),
+          ...this.leads.filter((lead) => !incomingIds.has(`${lead.status}:${String(lead.id)}`)),
           ...incoming
         ]
         state.page = Number(pagination?.page) || requestedPage
-        state.limit = Number(pagination?.limit) || state.limit
-        state.total = Number(pagination?.total) || 0
-        state.pages = Number(pagination?.pages) || 0
+        state.limit = Number(pagination?.limit ?? pagination?.perPage ?? pagination?.per_page) || state.limit
+        state.total = Number(pagination?.total ?? payload?.total) || incoming.length
+        state.pages = Number(pagination?.pages ?? pagination?.totalPages ?? pagination?.last_page) || 0
         state.hasMore = state.pages > 0
           ? state.page < state.pages
           : incoming.length >= state.limit

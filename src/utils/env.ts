@@ -9,6 +9,8 @@ export const getWhatsAppWebhookUrl = () => '/api/whatsapp'
 export const getLeadsApiUrl = () => '/leads'
 export const getChatList = (offset = 0, limit = 10) => `/gowa/chats?offset=${offset}&limit=${limit}`
 export const getChatMessages = (chatId: string, offset = 0, limit = 20) =>`/gowa/chat/${chatId}/messages?offset=${offset}&limit=${limit}`
+export const getMessageMediaDownload = (messageId: string) =>
+  `/gowa/message/${messageId}/download`
 export const getGowaHeaders = () => ({
   'X-Device-Id': `085111528585`
 })

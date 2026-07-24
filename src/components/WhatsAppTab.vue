@@ -95,8 +95,19 @@
 
             <!-- Outgoing (kanan) -->
             <div v-if="msg.is_from_me" class="flex justify-end">
-              <div class="bg-blue-500 relative text-white px-4 py-2 pb-6 rounded-md max-w-xs">
-                {{ msg.content }}
+              <div class="bg-blue-500 relative text-white px-2 pt-2 pb-6 rounded-md w-fit max-w-xs">
+                <img
+                  v-if="msg.media_type === 'image' && mediaUrls[msg.id]"
+                  :src="mediaUrls[msg.id]"
+                  :alt="msg.filename || 'WhatsApp image'"
+                  class="block max-h-72 max-w-full rounded object-contain"
+                  loading="lazy"
+                >
+                <p v-else-if="msg.media_type === 'image' && loadingMediaIds.includes(msg.id)"
+                  class="px-2 py-3 text-sm text-blue-100">Memuat gambar...</p>
+                <p v-else-if="msg.media_type === 'image' && failedMediaIds.includes(msg.id)"
+                  class="px-2 py-3 text-sm text-blue-100">Gambar tidak dapat dimuat</p>
+                <p v-if="msg.content" class="px-2 pt-2 whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 <span class="absolute! bottom-2 right-4 text-xs text-white ml-2">{{ moment(msg.created_at ||
                   msg.timestamp).format('HH:mm')
                 }}</span>
@@ -105,8 +116,19 @@
 
             <!-- Incoming (kiri) -->
             <div v-else class="flex justify-start">
-              <div class="bg-gray-200 relative text-black px-4 py-2 pb-6 rounded-md max-w-xs">
-                {{ msg.content }}
+              <div class="bg-gray-200 relative text-black px-2 pt-2 pb-6 rounded-md w-fit max-w-xs">
+                <img
+                  v-if="msg.media_type === 'image' && mediaUrls[msg.id]"
+                  :src="mediaUrls[msg.id]"
+                  :alt="msg.filename || 'WhatsApp image'"
+                  class="block max-h-72 max-w-full rounded object-contain"
+                  loading="lazy"
+                >
+                <p v-else-if="msg.media_type === 'image' && loadingMediaIds.includes(msg.id)"
+                  class="px-2 py-3 text-sm text-gray-500">Memuat gambar...</p>
+                <p v-else-if="msg.media_type === 'image' && failedMediaIds.includes(msg.id)"
+                  class="px-2 py-3 text-sm text-gray-500">Gambar tidak dapat dimuat</p>
+                <p v-if="msg.content" class="px-2 pt-2 whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 <span class="absolute! bottom-2 right-4 text-xs text-gray-500 ml-2">{{ moment(msg.created_at ||
                   msg.timestamp).format('HH:mm')
                 }}</span>
@@ -177,7 +199,7 @@
 import { defineComponent } from 'vue'
 import axios from 'axios'
 import axiosHelper from '@/utils/axiosHelper'
-import { getWhatsAppWebhookUrl, getTakeoverWebhookUrl, getLeadsApiUrl, getChatList, getChatMessages, getGowaHeaders } from '@/utils/env'
+import { getWhatsAppWebhookUrl, getTakeoverWebhookUrl, getLeadsApiUrl, getChatList, getChatMessages, getMessageMediaDownload, getGowaHeaders } from '@/utils/env'
 import {
   ArrowRight,
   MessageSquare,
@@ -218,6 +240,9 @@ export default defineComponent({
       detailLimit: 20,
       detailTotal: null as number | null,
       detailHasMore: true,
+      mediaUrls: {} as Record<string, string>,
+      loadingMediaIds: [] as string[],
+      failedMediaIds: [] as string[],
       form: {
         phone: '',
         message: ''
@@ -228,7 +253,35 @@ export default defineComponent({
   mounted() {
     this.fetchChatList()
   },
+  beforeUnmount() {
+    Object.values(this.mediaUrls).forEach((url) => URL.revokeObjectURL(url))
+  },
   methods: {
+
+    async loadMessageMedia(message: any) {
+      const id = String(message?.id || '')
+      if (
+        message?.media_type !== 'image' ||
+        !id ||
+        this.mediaUrls[id] ||
+        this.loadingMediaIds.includes(id) ||
+        this.failedMediaIds.includes(id)
+      ) return
+
+      this.loadingMediaIds.push(id)
+      try {
+        const response = await axiosHelper.get(getMessageMediaDownload(id), {
+          params: {phone: message.chat_jid},
+          headers: getGowaHeaders(),
+          responseType: 'blob'
+        })
+        this.mediaUrls[id] = URL.createObjectURL(response.data)
+      } catch {
+        this.failedMediaIds.push(id)
+      } finally {
+        this.loadingMediaIds = this.loadingMediaIds.filter((mediaId) => mediaId !== id)
+      }
+    },
 
     async fetchChatList(reset = false) {
       if (this.isListLoading || (!this.hasMore && !reset)) return
@@ -324,6 +377,7 @@ export default defineComponent({
         }
         const orderedRows = [...rows].reverse()
         this.detailMessages = isFirstPage ? orderedRows : [...orderedRows, ...this.detailMessages]
+        orderedRows.forEach((message: any) => this.loadMessageMedia(message))
         const total = Number(results?.pagination?.total)
         this.detailTotal = Number.isFinite(total) ? total : null
         this.detailPageIndex += 1
