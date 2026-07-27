@@ -1,10 +1,10 @@
 <template>
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h2 class="text-2xl font-bold">WhatsApp Messages</h2>
-        <p class="text-sm text-gray-500">Status of automated WhatsApp messages.</p>
-      </div>
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h2 class="text-2xl font-bold">WhatsApp Messages</h2>
+      <p class="text-sm text-gray-500">Status of automated WhatsApp messages.</p>
     </div>
+  </div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div class="pb-6 flex justify-between items-center">
@@ -19,8 +19,8 @@
         </button>
       </div>
 
-      <div class="h-[400px] overflow-y-auto pr-2 scrollbar-thin" @scroll.passive="handleMessageScroll">
-        <div v-if="!selectedMessage && isListLoading" v-for="value in 3">
+      <div class="h-[500px] overflow-y-auto pr-2 scrollbar-thin" @scroll.passive="handleMessageScroll">
+        <div v-if="!selectedMessage && isListLoading" v-for="value in 15">
           <div class="w-full h-20 rounded bg-gray-200 mb-2"></div>
         </div>
 
@@ -54,7 +54,8 @@
           </div>
 
         </div>
-        <p v-if="selectedMessage && isListLoading" class="py-3 text-center text-xs text-gray-400">Loading more messages...
+        <p v-if="selectedMessage && isListLoading" class="py-3 text-center text-xs text-gray-400">Loading more
+          messages...
         </p>
         <p v-else-if="!hasMore && messages.length" class="py-3 text-center text-xs text-gray-400">All messages loaded
         </p>
@@ -80,7 +81,7 @@
             <p class="text-[12px] text-gray-500">Last chat {{ moment(selectedMessage.last_message_time).fromNow() }}</p>
           </div>
         </div>
-        <div ref="detailScroller" class="h-[400px] overflow-y-auto pr-2 space-y-4 rounded scrollbar-thin bg-[#F8F9FA]"
+        <div ref="detailScroller" class="h-[500px] overflow-y-auto pr-2 space-y-4 rounded scrollbar-thin bg-[#F8F9FA]"
           @scroll.passive="handleDetailScroll">
           <p v-if="isLoading" class="py-2 text-center text-xs text-gray-400">Loading older messages...</p>
           <div v-for="(msg, idx) in detailMessages" :key="msg.id || idx" class="flex flex-col gap-2 px-6 py-4">
@@ -96,42 +97,48 @@
             <!-- Outgoing (kanan) -->
             <div v-if="msg.is_from_me" class="flex justify-end">
               <div class="bg-blue-500 relative text-white px-2 pt-2 pb-6 rounded-md w-fit max-w-xs">
-                <img
-                  v-if="msg.media_type === 'image' && mediaUrls[msg.id]"
-                  :src="mediaUrls[msg.id]"
-                  :alt="msg.filename || 'WhatsApp image'"
-                  class="block max-h-72 max-w-full rounded object-contain"
-                  loading="lazy"
-                >
-                <p v-else-if="msg.media_type === 'image' && loadingMediaIds.includes(msg.id)"
-                  class="px-2 py-3 text-sm text-blue-100">Memuat gambar...</p>
-                <p v-else-if="msg.media_type === 'image' && failedMediaIds.includes(msg.id)"
-                  class="px-2 py-3 text-sm text-blue-100">Gambar tidak dapat dimuat</p>
+                <img v-if="msg.media_type === 'image' && mediaUrls[msg.id]" :src="mediaUrls[msg.id]"
+                  :alt="msg.filename || 'WhatsApp image'" class="block max-h-72 max-w-full rounded object-contain"
+                  loading="lazy" role="button" tabindex="0"
+                  @click="openImagePreview(mediaUrls[msg.id], msg.filename || 'WhatsApp image')"
+                  @keydown.enter="openImagePreview(mediaUrls[msg.id], msg.filename || 'WhatsApp image')"
+                  @keydown.space.prevent="openImagePreview(mediaUrls[msg.id], msg.filename || 'WhatsApp image')">
+                <video v-else-if="msg.media_type === 'video' && mediaUrls[msg.id]" :src="mediaUrls[msg.id]" controls
+                  playsinline preload="metadata" class="block max-h-72 max-w-full rounded bg-black">
+                  Your browser does not support video playback.
+                </video>
+                <p v-else-if="isSupportedMedia(msg) && loadingMediaIds.includes(String(msg.id))"
+                  class="px-2 py-3 text-sm text-blue-100">Memuat media...</p>
+                <p v-else-if="isSupportedMedia(msg) && failedMediaIds.includes(String(msg.id))"
+                  class="px-2 py-3 text-sm text-blue-100">Media tidak dapat dimuat</p>
                 <p v-if="msg.content" class="px-2 pt-2 whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 <span class="absolute! bottom-2 right-4 text-xs text-white ml-2">{{ moment(msg.created_at ||
                   msg.timestamp).format('HH:mm')
-                }}</span>
+                  }}</span>
               </div>
             </div>
 
             <!-- Incoming (kiri) -->
             <div v-else class="flex justify-start">
-              <div class="bg-gray-200 relative text-black px-2 pt-2 pb-6 rounded-md w-fit max-w-xs">
-                <img
-                  v-if="msg.media_type === 'image' && mediaUrls[msg.id]"
-                  :src="mediaUrls[msg.id]"
-                  :alt="msg.filename || 'WhatsApp image'"
-                  class="block max-h-72 max-w-full rounded object-contain"
-                  loading="lazy"
-                >
-                <p v-else-if="msg.media_type === 'image' && loadingMediaIds.includes(msg.id)"
-                  class="px-2 py-3 text-sm text-gray-500">Memuat gambar...</p>
-                <p v-else-if="msg.media_type === 'image' && failedMediaIds.includes(msg.id)"
-                  class="px-2 py-3 text-sm text-gray-500">Gambar tidak dapat dimuat</p>
+              <div class="bg-gray-200 relative text-black px-2 pt-2 pb-6 rounded-md w-fit max-w-xs min-w-24">
+                <img v-if="msg.media_type === 'image' && mediaUrls[msg.id]" :src="mediaUrls[msg.id]"
+                  :alt="msg.filename || 'WhatsApp image'" class="block max-h-72 max-w-full rounded object-contain"
+                  loading="lazy" role="button" tabindex="0"
+                  @click="openImagePreview(mediaUrls[msg.id], msg.filename || 'WhatsApp image')"
+                  @keydown.enter="openImagePreview(mediaUrls[msg.id], msg.filename || 'WhatsApp image')"
+                  @keydown.space.prevent="openImagePreview(mediaUrls[msg.id], msg.filename || 'WhatsApp image')">
+                <video v-else-if="msg.media_type === 'video' && mediaUrls[msg.id]" :src="mediaUrls[msg.id]" controls
+                  playsinline preload="metadata" class="block max-h-72 max-w-full rounded bg-black">
+                  Your browser does not support video playback.
+                </video>
+                <p v-else-if="isSupportedMedia(msg) && loadingMediaIds.includes(String(msg.id))"
+                  class="px-2 py-3 text-sm text-gray-500">Memuat media...</p>
+                <p v-else-if="isSupportedMedia(msg) && failedMediaIds.includes(String(msg.id))"
+                  class="px-2 py-3 text-sm text-gray-500">Media tidak dapat dimuat</p>
                 <p v-if="msg.content" class="px-2 pt-2 whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 <span class="absolute! bottom-2 right-4 text-xs text-gray-500 ml-2">{{ moment(msg.created_at ||
                   msg.timestamp).format('HH:mm')
-                }}</span>
+                  }}</span>
               </div>
             </div>
           </div>
@@ -193,6 +200,23 @@
       </div>
     </div> -->
   </div>
+
+  <!-- <Teleport to="body"> -->
+  <dialog v-if="previewImageUrl" open
+    class="!fixed !inset-0 !z-50 !m-0 flex !h-screen !w-screen !max-h-none !max-w-none items-center justify-center bg-black/40 !p-4 relative"
+    @click.self="closeImagePreview" @keydown.esc="closeImagePreview">
+    <div class="bg-white !h-[calc(100vh-100px)] rounded items-center justify-center p-6 relative">
+      <button type="button"
+        class="!absolute -right-3 -top-3 pb-1  flex h-9 w-9 items-center justify-center rounded-full bg-white text-3xl text-black shadow hover:bg-black["
+        aria-label="Close image preview" @click="closeImagePreview">
+        &times;
+      </button>
+      <img :src="previewImageUrl" :alt="previewImageAlt" class=" max-h-full" @click.stop>
+
+    </div>
+  </dialog>
+
+ 
 </template>
 
 <script lang="ts">
@@ -243,6 +267,8 @@ export default defineComponent({
       mediaUrls: {} as Record<string, string>,
       loadingMediaIds: [] as string[],
       failedMediaIds: [] as string[],
+      previewImageUrl: '',
+      previewImageAlt: '',
       form: {
         phone: '',
         message: ''
@@ -252,16 +278,39 @@ export default defineComponent({
   },
   mounted() {
     this.fetchChatList()
+    window.addEventListener('keydown', this.handlePreviewKeydown)
   },
   beforeUnmount() {
+    window.removeEventListener('keydown', this.handlePreviewKeydown)
+    if (this.previewImageUrl) document.body.style.overflow = ''
     Object.values(this.mediaUrls).forEach((url) => URL.revokeObjectURL(url))
   },
   methods: {
 
+    openImagePreview(url: string, alt: string) {
+      this.previewImageUrl = url
+      this.previewImageAlt = alt
+      document.body.style.overflow = 'hidden'
+    },
+
+    closeImagePreview() {
+      this.previewImageUrl = ''
+      this.previewImageAlt = ''
+      document.body.style.overflow = ''
+    },
+
+    handlePreviewKeydown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && this.previewImageUrl) this.closeImagePreview()
+    },
+
+    isSupportedMedia(message: any) {
+      return message?.media_type === 'image' || message?.media_type === 'video'
+    },
+
     async loadMessageMedia(message: any) {
       const id = String(message?.id || '')
       if (
-        message?.media_type !== 'image' ||
+        !this.isSupportedMedia(message) ||
         !id ||
         this.mediaUrls[id] ||
         this.loadingMediaIds.includes(id) ||
@@ -271,7 +320,7 @@ export default defineComponent({
       this.loadingMediaIds.push(id)
       try {
         const response = await axiosHelper.get(getMessageMediaDownload(id), {
-          params: {phone: message.chat_jid},
+          params: { phone: message.chat_jid },
           headers: getGowaHeaders(),
           responseType: 'blob'
         })
@@ -336,6 +385,7 @@ export default defineComponent({
       return entries[entries.length - 1] || {}
     },
     handleMessageScroll(event: Event) {
+      if (!this.messages.length) return
       const element = event.target as HTMLElement
       if (element.scrollHeight - element.scrollTop - element.clientHeight < 120) this.fetchChatList()
     },
@@ -393,6 +443,7 @@ export default defineComponent({
       } finally { this.isLoading = false }
     },
     handleDetailScroll(event: Event) {
+      if (!this.detailMessages) return
       const element = event.target as HTMLElement
       if (element.scrollTop < 120) this.fetchChatMessages()
     }
