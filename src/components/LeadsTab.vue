@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import axiosHelper from '@/utils/axiosHelper'
+import axiosHelper, { getApiErrorMessage } from '@/utils/axiosHelper'
 import { getLeadsApiUrl } from '@/utils/env'
 import {
   CheckCircle2,
@@ -96,7 +96,8 @@ export default defineComponent({
         contacted: createStatusState(),
         closed: createStatusState()
       } as Record<LeadStatus, StatusState>,
-      requestVersion: 0
+      requestVersion: 0,
+      error: '',
     }
   },
   computed: {
@@ -118,9 +119,9 @@ export default defineComponent({
       if (reset) {
         this.requestVersion = activeRequestVersion
         this.leads = []
-        ;(['new', 'contacted', 'closed'] as LeadStatus[]).forEach((status) => {
-          this.statusState[status] = createStatusState()
-        })
+          ; (['new', 'contacted', 'closed'] as LeadStatus[]).forEach((status) => {
+            this.statusState[status] = createStatusState()
+          })
       }
 
       await Promise.all(
@@ -186,6 +187,7 @@ export default defineComponent({
         this.$emit('leadsUpdated', this.leads)
       } catch (error: any) {
         console.error('Error fetching leads:', error)
+        this.error = getApiErrorMessage(error, `Gagal memuat.`)
       } finally {
         if (requestVersion === this.requestVersion) state.loading = false
       }
@@ -241,6 +243,7 @@ export default defineComponent({
       <div>
         <h2 class="text-2xl font-bold">Leads</h2>
         <p class="text-sm text-gray-500">Track leads by progress and branch.</p>
+        <p v-if="error" class="mb-4 text-sm text-red-600">{{ error }}</p>
       </div>
       <div class="flex gap-2">
         <div class="!relative">

@@ -80,7 +80,55 @@
             </h3>
             <p class="text-[12px] text-gray-500">Last chat {{ moment(selectedMessage.last_message_time).fromNow() }}</p>
           </div>
+          <button type="button" @click="openLeadForm"
+            :disabled="isAddingLead || addedLeadJids.includes(selectedMessage.jid)"
+            class="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm text-white disabled:opacity-50">
+            {{ addedLeadJids.includes(selectedMessage.jid) ? 'Added to Leads' : 'Add to Leads' }}
+          </button>
         </div>
+        <dialog v-if="showLeadForm" open
+          class="!fixed !inset-0 !z-50 !m-0 flex !h-screen !w-screen !max-h-none !max-w-none items-center justify-center bg-black/40 p-4"
+          @click.self="showLeadForm = false" @keydown.esc="showLeadForm = false">
+          <form v-if="showLeadForm" @submit.prevent="addSelectedChatToLeads"
+            class="mx-6 mb-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="text-sm">Name
+                <input v-model="leadForm.name" required :disabled="isAddingLead"
+                  class="mt-1 w-full rounded-md border border-gray-200 p-2" />
+              </label>
+              <label class="text-sm">Phone
+                <input v-model="leadForm.phone" readonly
+                  class="mt-1 w-full rounded-md border border-gray-200 bg-gray-100 p-2" />
+              </label>
+              <label class="text-sm">Location
+                <input v-model="leadForm.location" required :disabled="isAddingLead" placeholder="Medan"
+                  class="mt-1 w-full rounded-md border border-gray-200 p-2" />
+              </label>
+              <label class="text-sm">Branch
+                <input v-model="leadForm.branch" required :disabled="isAddingLead" placeholder="medan"
+                  class="mt-1 w-full rounded-md border border-gray-200 p-2" />
+              </label>
+            </div>
+            <label class="block text-sm">Message
+              <textarea v-model="leadForm.message" :disabled="isAddingLead" rows="3"
+                class="mt-1 w-full rounded-md border border-gray-200 p-2"></textarea>
+            </label>
+            <label class="block text-sm">Notes
+              <textarea v-model="leadForm.notes" :disabled="isAddingLead" rows="2"
+                class="mt-1 w-full rounded-md border border-gray-200 p-2"></textarea>
+            </label>
+            <p class="text-xs text-gray-500">Source: WhatsApp · Status: New</p>
+            <p v-if="leadError" role="alert" class="text-sm text-red-600">{{ leadError }}</p>
+            <div class="flex justify-end gap-2">
+              <button type="button" @click="showLeadForm = false" :disabled="isAddingLead"
+                class="rounded-md border border-gray-200 px-4 py-2 text-sm">Cancel</button>
+              <button type="submit" :disabled="isAddingLead"
+                class="rounded-md bg-blue-500 px-4 py-2 text-sm text-white disabled:opacity-50">{{ isAddingLead ?
+                  'Saving...' : 'Save Lead' }}</button>
+            </div>
+          </form>
+        </dialog>
+        <p v-if="leadSuccess" role="status" class="px-6 pb-4 text-sm text-green-600">{{ leadSuccess }}</p>
         <div ref="detailScroller" class="h-[500px] overflow-y-auto pr-2 space-y-4 rounded scrollbar-thin bg-[#F8F9FA]"
           @scroll.passive="handleDetailScroll">
           <p v-if="isLoading" class="py-2 text-center text-xs text-gray-400">Loading older messages...</p>
@@ -114,7 +162,7 @@
                 <p v-if="msg.content" class="px-2 pt-2 whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 <span class="absolute! bottom-2 right-4 text-xs text-white ml-2">{{ moment(msg.created_at ||
                   msg.timestamp).format('HH:mm')
-                  }}</span>
+                }}</span>
               </div>
             </div>
 
@@ -138,11 +186,25 @@
                 <p v-if="msg.content" class="px-2 pt-2 whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 <span class="absolute! bottom-2 right-4 text-xs text-gray-500 ml-2">{{ moment(msg.created_at ||
                   msg.timestamp).format('HH:mm')
-                  }}</span>
+                }}</span>
               </div>
             </div>
           </div>
         </div>
+        <form @submit.prevent="sendWhatsAppMessage" class="border-t border-gray-100 bg-gray-50 p-4 rounded-b-xl">
+          <div class="flex items-end gap-3">
+            <textarea v-model="form.message" :disabled="isSending" aria-label="Message" rows="2"
+              class="flex-1 min-w-0 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              placeholder="Type a message..." required></textarea>
+            <button type="submit" :disabled="isSending || !form.message.trim()"
+              :aria-label="isSending ? 'Sending message' : 'Send message'"
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <Send :size="20" :class="{ 'animate-pulse': isSending }" />
+            </button>
+          </div>
+          <p v-if="sendError" role="alert" class="mt-2 text-sm text-red-600">{{ sendError }}</p>
+          <p v-if="sendSuccess" role="status" class="mt-2 text-sm text-green-600">{{ sendSuccess }}</p>
+        </form>
       </div>
       <div v-else>
         <div class="p-6 pb-4">
@@ -159,32 +221,6 @@
       </div>
 
     </div>
-    <!-- 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div class="mb-6">
-        <h3 class="font-bold text-lg">Send Manual Message</h3>
-        <p class="text-sm text-gray-500">Trigger a WhatsApp message via n8n workflow.</p>
-      </div>
-      <form @submit.prevent="sendWhatsAppMessage" class="space-y-4">
-        <div class="space-y-2">
-          <label class="text-sm font-medium">Recipient Phone Number</label>
-          <input v-model="form.phone" type="text" placeholder="+628..."
-            class="w-full p-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-black outline-none transition-all"
-            required />
-        </div>
-        <div class="space-y-2">
-          <label class="text-sm font-medium">Message Content</label>
-          <textarea v-model="form.message"
-            class="w-full min-h-[120px] p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-sm"
-            placeholder="Type your message here..." required></textarea>
-        </div>
-        <button type="submit"
-          class="w-full py-2 bg-black text-white rounded-md flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors">
-          <Send :size="16" />
-          Trigger n8n Workflow
-        </button>
-      </form>
-    </div> -->
 
     <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div class="mb-6">
@@ -216,13 +252,12 @@
     </div>
   </dialog>
 
- 
+
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import axios from 'axios'
-import axiosHelper from '@/utils/axiosHelper'
+import axiosHelper, { getApiErrorMessage, isApiRateLimited } from '@/utils/axiosHelper'
 import { getWhatsAppWebhookUrl, getTakeoverWebhookUrl, getLeadsApiUrl, getChatList, getChatMessages, getMessageMediaDownload, getGowaHeaders } from '@/utils/env'
 import {
   ArrowRight,
@@ -249,6 +284,15 @@ export default defineComponent({
   },
   data() {
     return {
+      showLeadForm: false,
+      isAddingLead: false,
+      leadError: '',
+      leadSuccess: '',
+      addedLeadJids: [] as string[],
+      leadForm: { name: '', phone: '', notes: '', message: '', location: '', branch: '' },
+      isSending: false,
+      sendError: '',
+      sendSuccess: '',
       isLoading: false,
       isListLoading: false,
       messages: [],
@@ -270,7 +314,6 @@ export default defineComponent({
       previewImageUrl: '',
       previewImageAlt: '',
       form: {
-        phone: '',
         message: ''
       },
       moment
@@ -286,6 +329,116 @@ export default defineComponent({
     Object.values(this.mediaUrls).forEach((url) => URL.revokeObjectURL(url))
   },
   methods: {
+    openLeadForm() {
+      if (!this.selectedMessage || this.isAddingLead) return
+      const incoming = [...this.detailMessages].reverse().find((msg: any) => !msg.is_from_me && msg.content)
+      this.leadForm = {
+        name: this.selectedMessage.name || '',
+        phone: this.selectedMessage.jid.split('@')[0].replace(/\D/g, ''),
+        notes: 'New leads, hubungi segera',
+        message: incoming?.content || '',
+        location: '',
+        branch: ''
+      }
+      this.leadError = ''
+      this.leadSuccess = ''
+      this.showLeadForm = true
+    },
+    async addSelectedChatToLeads() {
+      const jid = this.selectedMessage?.jid
+      if (!jid || this.isAddingLead || this.addedLeadJids.includes(jid)) return
+      const payload = {
+        name: this.leadForm.name.trim(),
+        phone: this.leadForm.phone,
+        source: 'whatsapp',
+        notes: this.leadForm.notes.trim(),
+        message: this.leadForm.message.trim(),
+        location: this.leadForm.location.trim(),
+        branch: this.leadForm.branch.trim(),
+        status: 'new'
+      }
+      this.leadError = ''
+      if (!payload.name || !payload.phone || !payload.location || !payload.branch) {
+        this.leadError = 'Please fill in name, location, and branch.'
+        return
+      }
+      this.isAddingLead = true
+      try {
+        const response = await axiosHelper.post(getLeadsApiUrl(), payload)
+        if (response.data?.success === false) {
+          if (this.selectedMessage?.jid === jid) this.leadError = response.data?.message || 'Unable to add lead.'
+          return
+        }
+        this.addedLeadJids.push(jid)
+        if (this.selectedMessage?.jid === jid) {
+          this.showLeadForm = false
+          this.leadSuccess = 'Lead added successfully.'
+        }
+      } catch (error) {
+        if (this.selectedMessage?.jid === jid) this.leadError = getApiErrorMessage(error, 'Unable to add lead. Please try again.')
+      } finally {
+        this.isAddingLead = false
+      }
+    },
+    async sendWhatsAppMessage() {
+      if (this.isSending) return
+      this.sendError = ''
+      this.sendSuccess = ''
+      const phone = this.selectedMessage?.jid || ''
+      const message = this.form.message.trim()
+      if (!phone || !message) {
+        this.sendError = 'Select a chat and enter a message.'
+        return
+      }
+      this.isSending = true
+      try {
+        const response = await axiosHelper.post('gowa/send/message', { message, phone }, {
+          headers: getGowaHeaders()
+        })
+        if (this.selectedMessage?.jid !== phone) return
+        if (response.data?.success === false) {
+          this.sendError = response.data?.message || 'Unable to send message.'
+          return
+        }
+        this.form.message = ''
+        this.sendSuccess = 'Message sent successfully.'
+        try {
+          await this.refreshSentChat(phone)
+        } catch {
+          if (this.selectedMessage?.jid === phone) {
+            this.sendSuccess = 'Message sent. Unable to refresh the chat; reopen it to see the latest messages.'
+          }
+        }
+      } catch (error) {
+        if (this.selectedMessage?.jid === phone) {
+          this.sendError = getApiErrorMessage(error, 'Unable to send message. Please try again.')
+        }
+      } finally {
+        this.isSending = false
+      }
+    },
+
+    async refreshSentChat(phone: string) {
+      // Reload the pages already visible so older bubbles remain available.
+      const pageCount = Math.max(1, this.detailPageIndex - 1)
+      const limit = pageCount * this.detailLimit
+      const response = await axiosHelper.get(getChatMessages(phone, 0, limit), {
+        headers: getGowaHeaders()
+      })
+      if (this.selectedMessage?.jid !== phone) return
+      const results = response.data?.results ?? response.data?.result ?? response.data
+      const rows = Array.isArray(results?.data) ? results.data : []
+      this.detailMessages = [...rows].reverse()
+      this.detailMessages.forEach((message: any) => this.loadMessageMedia(message))
+      const total = Number(results?.pagination?.total)
+      this.detailTotal = Number.isFinite(total) ? total : null
+      this.detailPageIndex = pageCount + 1
+      this.detailOffset = limit
+      this.detailHasMore = this.detailTotal !== null ? limit < this.detailTotal : rows.length >= limit
+      await this.$nextTick()
+      const scroller = this.$refs.detailScroller as HTMLElement | undefined
+      if (scroller) scroller.scrollTop = scroller.scrollHeight
+    },
 
     openImagePreview(url: string, alt: string) {
       this.previewImageUrl = url
@@ -333,6 +486,7 @@ export default defineComponent({
     },
 
     async fetchChatList(reset = false) {
+      if (isApiRateLimited()) return
       if (this.isListLoading || (!this.hasMore && !reset)) return
       if (reset) { this.offset = 0; this.chatPageIndex = 1; this.chatTotal = null; this.hasMore = true; this.messages = [] }
       if (this.chatTotal !== null && this.offset >= this.chatTotal) { this.hasMore = false; return }
@@ -342,6 +496,7 @@ export default defineComponent({
       const leadsUrl = getChatList(this.offset, requestLimit)
 
       if (!leadsUrl) {
+        this.isListLoading = false
         console.log('VITE_LEADS_API_URL not configured')
         return
       }
@@ -365,13 +520,15 @@ export default defineComponent({
           this.chatTotal = Number.isFinite(total) ? total : null
           this.chatPageIndex += 1
           this.offset = this.limit * (this.chatPageIndex - 1)
-          this.hasMore = this.chatTotal !== null ? this.offset < this.chatTotal : page.length >= requestLimit
+          this.hasMore = this.chatTotal !== null ? this.offset < this.chatTotal : rows.length >= requestLimit
           if (!this.selectedMessage && this.messages.length) await this.showDetailMessage(this.messages[0])
         }
       } catch (error: any) {
-
+        // Leave pagination available for a manual retry, without recursively retrying errors.
+        return
+      } finally {
+        this.isListLoading = false
       }
-      this.isListLoading = false
 
       // A page may contain only excluded chats; continue until a visible chat or the end.
       if (!this.messages.length && this.hasMore) await this.fetchChatList()
@@ -399,7 +556,13 @@ export default defineComponent({
     async showDetailMessage(msg: any) {
       this.isLoading = false
       this.isListLoading = false
+      this.form.message = ''
+      this.sendError = ''
+      this.sendSuccess = ''
       this.selectedMessage = msg
+      this.showLeadForm = false
+      this.leadError = ''
+      this.leadSuccess = ''
       this.detailMessages = []
       this.detailOffset = 0
       this.detailPageIndex = 1
@@ -408,6 +571,7 @@ export default defineComponent({
       await this.fetchChatMessages()
     },
     async fetchChatMessages() {
+      if (isApiRateLimited()) return
       if (!this.selectedMessage || this.isLoading || !this.detailHasMore) return
       if (this.detailTotal !== null && this.detailOffset >= this.detailTotal) { this.detailHasMore = false; return }
       this.isLoading = true
@@ -440,6 +604,8 @@ export default defineComponent({
             ? updatedScroller.scrollHeight
             : updatedScroller.scrollHeight - previousHeight
         }
+      } catch {
+        // Axios displays the error; allow scrolling or reopening the chat to retry later.
       } finally { this.isLoading = false }
     },
     handleDetailScroll(event: Event) {
