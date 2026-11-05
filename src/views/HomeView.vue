@@ -93,9 +93,9 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="flex h-screen bg-[#F8F9FA] text-[#1A1A1A] font-sans overflow-hidden">
+  <div class="dashboard-shell flex min-h-dvh flex-col lg:h-dvh lg:flex-row bg-[#F8F9FA] text-[#1A1A1A] font-sans lg:overflow-hidden">
     <aside
-      :class="['bg-white border-r border-gray-200 flex flex-col z-20 transition-all duration-300', isSidebarOpen ? 'w-[260px]' : 'w-[80px]']">
+      :class="['bg-white border-r border-gray-200 hidden lg:flex shrink-0 flex-col z-20 transition-all duration-300', isSidebarOpen ? 'w-[260px]' : 'w-[80px]']">
       <div class="p-6 flex items-center justify-between">
         <div v-if="isSidebarOpen" class="flex items-center gap-2 font-bold text-xl tracking-tight">
           <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white">
@@ -130,7 +130,11 @@ export default defineComponent({
       </div>
     </aside>
 
-    <main class="flex-1 overflow-auto p-4 md:p-8">
+    <header class="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 lg:hidden">
+      <div class="flex min-w-0 items-center gap-2 font-semibold"><LayoutDashboard :size="22" class="shrink-0" /><span class="truncate">Delica · {{ tabTitle }}</span></div>
+      <button @click="handleLogout" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-gray-100" aria-label="Sign out"><LogOut :size="20" /></button>
+    </header>
+    <main class="dashboard-content min-w-0 flex-1 p-4 lg:overflow-y-auto lg:p-8">
       <transition name="fade" mode="out-in">
         <div :key="activeTab">
           <OverviewTab v-if="activeTab === 'overview'" />
@@ -144,5 +148,13 @@ export default defineComponent({
         </div>
       </transition>
     </main>
+    <nav class="mobile-tabs fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-gray-200 bg-white lg:hidden" aria-label="Menu utama">
+      <button v-for="item in navItems" :key="item.id" type="button"
+        :aria-current="activeTab === item.id ? 'page' : undefined"
+        :class="['flex min-w-[76px] flex-1 flex-col items-center justify-center gap-1 px-2 py-3 text-[11px] font-medium transition-colors', activeTab === item.id ? 'bg-gray-100 text-gray-950' : 'text-gray-500 hover:bg-gray-50']"
+        @click="handleChangeTab(item.id)">
+        <component :is="item.icon" :size="20" aria-hidden="true" /><span>{{ item.label }}</span>
+      </button>
+    </nav>
   </div>
 </template>

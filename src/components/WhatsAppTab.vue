@@ -5,9 +5,9 @@
       <p class="text-sm text-gray-500">Status of automated WhatsApp messages.</p>
     </div>
   </div>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div class="pb-6 flex justify-between items-center">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 min-w-0 p-4 sm:p-6">
+      <div class="pb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
           <h3 class="font-bold text-lg">Recent Messages</h3>
           <p class="text-sm text-gray-500">Status of automated WhatsApp messages.</p>
@@ -19,7 +19,7 @@
         </button>
       </div>
 
-      <div class="h-[500px] overflow-y-auto pr-2 scrollbar-thin" @scroll.passive="handleMessageScroll">
+      <div class="h-[50dvh] lg:h-[500px] overflow-y-auto pr-2 scrollbar-thin" @scroll.passive="handleMessageScroll">
         <div v-if="!selectedMessage && isListLoading" v-for="value in 15">
           <div class="w-full h-20 rounded bg-gray-200 mb-2"></div>
         </div>
@@ -31,9 +31,9 @@
 
             {{ msg.name.charAt(0) }}
           </div>
-          <div class="w-full">
+          <div class="min-w-0 flex-1">
             <div class="flex items-center justify-between gap-2">
-              <p class="font-bold text-sm ">{{ msg.name }}
+              <p class="min-w-0 break-words font-bold text-sm">{{ msg.name }}
               </p>
               <span
                 :class="['text-[10px] transition-colors group-hover:text-white', selectedMessage && selectedMessage.jid == msg.jid ? 'text-white' : 'text-gray-400']">
@@ -65,13 +65,13 @@
     <div v-if="selectedMessage" class="bg-white rounded-xl shadow-sm border border-gray-100">
       <div v-if="selectedMessage">
 
-        <div class="p-6 pb-4 flex items-center">
+        <div class="p-4 sm:p-6 pb-4 flex flex-wrap items-center gap-y-3">
           <div
             class="flex h-10 w-10 me-4 shrink-0 items-center justify-center rounded-full bg-gray-200 text-[18px] font-bold text-gray-400">
             {{ selectedMessage.name.charAt(0) }}
           </div>
           <div>
-            <h3 class="font-bold text-lg flex items-center gap-2">{{ selectedMessage.name }}
+            <h3 class="font-bold text-lg flex flex-col items-start gap-2 sm:flex-row sm:items-center">{{ selectedMessage.name }}
               <span :class="[
                 'text-[12px] px-2 py-0.5 border border-gray-200 rounded-full text-sm uppercase tracking-wider bg-gray-100 text-gray-600'
               ]">
@@ -82,7 +82,7 @@
           </div>
           <button type="button" @click="openLeadForm"
             :disabled="isAddingLead || addedLeadJids.includes(selectedMessage.jid)"
-            class="ml-auto rounded-lg bg-blue-500 px-3 py-2 text-sm text-white disabled:opacity-50">
+            class="ml-auto min-h-11 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white disabled:opacity-50">
             {{ addedLeadJids.includes(selectedMessage.jid) ? 'Added to Leads' : 'Add to Leads' }}
           </button>
         </div>
@@ -90,7 +90,7 @@
           class="!fixed !inset-0 !z-50 !m-0 flex !h-screen !w-screen !max-h-none !max-w-none items-center justify-center bg-black/40 p-4"
           @click.self="showLeadForm = false" @keydown.esc="showLeadForm = false">
           <form v-if="showLeadForm" @submit.prevent="addSelectedChatToLeads"
-            class="mx-6 mb-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            class="w-full max-w-xl space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label class="text-sm">Name
                 <input v-model="leadForm.name" required :disabled="isAddingLead"
@@ -129,10 +129,10 @@
           </form>
         </dialog>
         <p v-if="leadSuccess" role="status" class="px-6 pb-4 text-sm text-green-600">{{ leadSuccess }}</p>
-        <div ref="detailScroller" class="h-[500px] overflow-y-auto pr-2 space-y-4 rounded scrollbar-thin bg-[#F8F9FA]"
+        <div ref="detailScroller" class="h-[50dvh] lg:h-[500px] overflow-y-auto pr-2 space-y-4 rounded scrollbar-thin bg-[#F8F9FA]"
           @scroll.passive="handleDetailScroll">
           <p v-if="isLoading" class="py-2 text-center text-xs text-gray-400">Loading older messages...</p>
-          <div v-for="(msg, idx) in detailMessages" :key="msg.id || idx" class="flex flex-col gap-2 px-6 py-4">
+          <div v-for="(msg, idx) in detailMessages" :key="msg.id || idx" class="flex flex-col gap-2 px-3 sm:px-6 py-4">
             <span v-if="!detailMessages[idx - 1] || idx == detailMessages.length - 1"
               class=" text-xs text-gray-500 pb-4 text-center">{{
                 moment(msg.created_at || msg.timestamp).format('ddd, DD MMM yyyy') }}</span>
@@ -144,7 +144,7 @@
 
             <!-- Outgoing (kanan) -->
             <div v-if="msg.is_from_me" class="flex justify-end">
-              <div class="bg-blue-500 relative text-white px-2 pt-2 pb-6 rounded-md w-fit max-w-xs">
+              <div class="bg-blue-500 relative text-white px-2 pt-2 pb-6 rounded-md w-fit max-w-[90%] sm:max-w-xs">
                 <img v-if="msg.media_type === 'image' && mediaUrls[msg.id]" :src="mediaUrls[msg.id]"
                   :alt="msg.filename || 'WhatsApp image'" class="block max-h-72 max-w-full rounded object-contain"
                   loading="lazy" role="button" tabindex="0"
@@ -168,7 +168,7 @@
 
             <!-- Incoming (kiri) -->
             <div v-else class="flex justify-start">
-              <div class="bg-gray-200 relative text-black px-2 pt-2 pb-6 rounded-md w-fit max-w-xs min-w-24">
+              <div class="bg-gray-200 relative text-black px-2 pt-2 pb-6 rounded-md w-fit max-w-[90%] sm:max-w-xs min-w-24">
                 <img v-if="msg.media_type === 'image' && mediaUrls[msg.id]" :src="mediaUrls[msg.id]"
                   :alt="msg.filename || 'WhatsApp image'" class="block max-h-72 max-w-full rounded object-contain"
                   loading="lazy" role="button" tabindex="0"
@@ -222,7 +222,7 @@
 
     </div>
 
-    <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 min-w-0 p-4 sm:p-6">
       <div class="mb-6">
         <h3 class="font-bold text-lg">Message Takeover</h3>
         <p class="text-sm text-gray-500">Incoming WhatsApp messages from n8n workflow.</p>
@@ -241,13 +241,13 @@
   <dialog v-if="previewImageUrl" open
     class="!fixed !inset-0 !z-50 !m-0 flex !h-screen !w-screen !max-h-none !max-w-none items-center justify-center bg-black/40 !p-4 relative"
     @click.self="closeImagePreview" @keydown.esc="closeImagePreview">
-    <div class="bg-white !h-[calc(100vh-100px)] rounded items-center justify-center p-6 relative">
+    <div class="bg-white max-w-full !h-[calc(100dvh-100px)] rounded items-center justify-center p-6 relative">
       <button type="button"
-        class="!absolute -right-3 -top-3 pb-1  flex h-9 w-9 items-center justify-center rounded-full bg-white text-3xl text-black shadow hover:bg-black["
+        class="!absolute -right-3 -top-3 pb-1  flex h-9 w-9 items-center justify-center rounded-full bg-white text-3xl text-black shadow hover:bg-gray-100"
         aria-label="Close image preview" @click="closeImagePreview">
         &times;
       </button>
-      <img :src="previewImageUrl" :alt="previewImageAlt" class=" max-h-full" @click.stop>
+      <img :src="previewImageUrl" :alt="previewImageAlt" class="max-h-full max-w-full object-contain" @click.stop>
 
     </div>
   </dialog>
@@ -268,8 +268,7 @@ import {
 import moment from 'moment';
 
 const HIDDEN_CHAT_NUMBERS = new Set([
-  '62895335202843',
-  '6281365569764'
+  '62895335202843'
 ])
 
 const chatNumber = (chat: any) => String(chat?.jid || chat?.phone || chat?.id || '').replace(/\D/g, '')

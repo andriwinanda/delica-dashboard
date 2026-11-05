@@ -53,7 +53,7 @@ export default defineComponent({
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
       <div>
         <h2 class="text-2xl font-bold">{{ title }}</h2>
         <p class="text-sm text-gray-500">Kelola data {{ title.toLowerCase() }}.</p>
@@ -61,11 +61,11 @@ export default defineComponent({
         <Plus :size="16" />Tambah
       </button>
     </div>
-    <div class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
       <dialog v-if="dialogOpen" open
         class="!fixed !inset-0 !z-50 !m-0 flex !h-screen !w-screen !max-h-none !max-w-none items-center justify-center bg-black/40 p-4"
         @click.self="reset" @keydown.esc="reset">
-        <form class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl" @submit.prevent="save">
+        <form class="w-full max-w-2xl rounded-3xl bg-white p-4 sm:p-6 shadow-2xl" @submit.prevent="save">
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h3 class="text-xl font-semibold">{{ editingId === null ? 'Tambah' : 'Edit' }} {{ title }}</h3>
@@ -87,7 +87,7 @@ export default defineComponent({
           <RefreshCw :size="14" />Refresh
         </button></div>
       <div class="overflow-x-auto">
-        <table class="min-w-full text-left text-sm">
+        <table class="responsive-table min-w-full text-left text-sm">
           <thead>
             <tr class="border-b text-xs uppercase text-gray-500">
               <th v-for="field in fields" :key="field" class="px-3 py-3">{{ field }}</th>
@@ -96,8 +96,8 @@ export default defineComponent({
           </thead>
           <tbody>
             <tr v-for="item in items" :key="item._id || item.id" class="border-b border-gray-100">
-              <td v-for="field in fields" :key="field" class="px-3 py-3">{{ display(item, field) }}</td>
-              <td class="flex gap-2 px-3 py-3"><button @click="edit(item)">
+              <td v-for="field in fields" :key="field" :data-label="field" class="px-3 py-3">{{ display(item, field) }}</td>
+              <td data-label="Actions" class="flex gap-2 px-3 py-3"><button @click="edit(item)">
                   <Pencil :size="15" />
                 </button><button @click="remove(item._id || item.id)">
                   <Trash2 :size="15" class="text-red-500" />

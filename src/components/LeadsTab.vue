@@ -239,13 +239,13 @@ export default defineComponent({
 <template>
   <div class="space-y-6">
 
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
       <div>
         <h2 class="text-2xl font-bold">Leads</h2>
         <p class="text-sm text-gray-500">Track leads by progress and branch.</p>
         <p v-if="error" class="mb-4 text-sm text-red-600">{{ error }}</p>
       </div>
-      <div class="flex gap-2">
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:flex">
         <div class="!relative">
           <select v-model.number="selectedMonth" @change="applyPeriodFilter"
             class="w-full appearance-none px-3 py-3 pr-10 bg-white border border-black text-black rounded-md">
@@ -303,7 +303,7 @@ export default defineComponent({
           </span>
         </div>
 
-        <div class="space-y-3 h-[500px] overflow-y-auto pr-2 scrollbar-thin"
+        <div class="space-y-3 max-h-[60dvh] lg:h-[500px] lg:max-h-none overflow-y-auto pr-2 scrollbar-thin"
           @scroll.passive="handleStatusScroll(status.key, $event)">
           <article v-for="lead in getLeadsByStatus(status.key)" :key="lead.id"
             class="rounded-md border border-gray-100 bg-white p-4 shadow-sm">

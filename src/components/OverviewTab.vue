@@ -169,7 +169,7 @@ export default defineComponent({
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
       <div>
         <h2 class="text-2xl font-bold">Overview</h2>
         <p class="text-sm text-gray-500">Live business performance from Delimitca API.</p>
@@ -217,7 +217,7 @@ export default defineComponent({
           <p class="text-sm text-gray-500">Product sales and revenue performance.</p>
         </div>
         <div class="overflow-x-auto">
-          <table class="min-w-full text-left">
+          <table class="responsive-table min-w-full text-left">
             <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
               <tr>
                 <th class="px-6 py-3 font-medium">Product</th>
@@ -227,12 +227,12 @@ export default defineComponent({
             </thead>
             <tbody class="divide-y divide-gray-100">
               <tr v-for="product in productMetrics" :key="product.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4"><span class="flex items-center gap-3 text-sm font-medium"><span
+                <td data-label="Product" class="px-6 py-4"><span class="flex items-center gap-3 text-sm font-medium"><span
                       class="rounded-xl bg-violet-50 p-2 text-violet-600">
                       <Package :size="16" />
                     </span>{{ product.name }}</span></td>
-                <td class="px-6 py-4 text-right text-sm text-gray-600">{{ formatNumber(product.quantity) }}</td>
-                <td class="px-6 py-4 text-right text-sm font-semibold text-gray-900">{{ formatCurrency(product.revenue)
+                <td data-label="Quantity" class="px-6 py-4 text-right text-sm text-gray-600">{{ formatNumber(product.quantity) }}</td>
+                <td data-label="Revenue" class="px-6 py-4 text-right text-sm font-semibold text-gray-900">{{ formatCurrency(product.revenue)
                 }}</td>
               </tr>
               <tr v-if="!productMetrics.length">

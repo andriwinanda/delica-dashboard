@@ -21,3 +21,118 @@
 .font-bold {
   font-weight: 600;
 }
+
+/* Mobile is the default layout; wide screens restore the dashboard columns. */
+html, body, #app {
+  min-width: 0;
+  margin: 0;
+}
+
+.dashboard-content {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  overflow-wrap: anywhere;
+}
+
+.dashboard-content :where(.grid, section, form, input, select, textarea) {
+  min-width: 0;
+}
+
+.mobile-tabs {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 30;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overscroll-behavior-x: contain;
+}
+
+.dashboard-shell button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.dashboard-shell dialog[open] {
+  height: 100dvh !important;
+  overflow-y: auto;
+}
+
+.dashboard-shell dialog[open] > :first-child {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+
+.responsive-table,
+.responsive-table tbody {
+  display: block;
+  width: 100%;
+}
+
+.responsive-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.responsive-table tbody > tr {
+  display: block;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.responsive-table td[data-label] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.5rem 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.responsive-table td[data-label]::before {
+  content: attr(data-label);
+  flex: 0 0 100%;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.responsive-table td[colspan] {
+  display: block;
+}
+
+.dashboard-content td button {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .responsive-table { display: table; }
+  .responsive-table tbody { display: table-row-group; }
+  .responsive-table thead {
+    display: table-header-group;
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+  .responsive-table tbody > tr { display: table-row; padding: 0; }
+  .responsive-table td[data-label], .responsive-table td[colspan] {
+    display: table-cell;
+    width: auto;
+    padding: 0.75rem;
+  }
+  .responsive-table td[data-label].text-right { text-align: right; }
+  .responsive-table td[data-label]::before { display: none; }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-content { padding-bottom: 2rem; }
+}

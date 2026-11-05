@@ -50,7 +50,7 @@ export default defineComponent({
       </button>
     </div>
     <div class="overflow-x-auto">
-      <table class="min-w-full text-left">
+      <table class="responsive-table min-w-full text-left">
         <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
           <tr>
             <th class="px-6 py-3">ID</th>
@@ -63,16 +63,16 @@ export default defineComponent({
         </thead>
         <tbody class="divide-y divide-gray-100">
           <tr v-for="(item, idx) in [...syncData, ...syncData]" :key="idx" class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4 text-xs text-gray-400 font-mono">#{{ item.id }}{{ idx }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ item.type }}</td>
-            <td class="px-6 py-4 text-sm font-semibold">{{ item.name }}</td>
-            <td class="px-6 py-4 text-sm">
+            <td data-label="ID" class="px-6 py-4 text-xs text-gray-400 font-mono">#{{ item.id }}{{ idx }}</td>
+            <td data-label="Type" class="px-6 py-4 text-sm text-gray-900">{{ item.type }}</td>
+            <td data-label="Entity Name" class="px-6 py-4 text-sm font-semibold">{{ item.name }}</td>
+            <td data-label="Status" class="px-6 py-4 text-sm">
               <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" :class="item.status === 'Synced' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
                 {{ item.status }}
               </span>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ item.time }}</td>
-            <td class="px-6 py-4 text-right">
+            <td data-label="Last Sync" class="px-6 py-4 text-sm text-gray-500">{{ item.time }}</td>
+            <td data-label="Actions" class="px-6 py-4 text-right">
               <button class="text-sm font-medium text-sky-600 hover:underline">Details</button>
             </td>
           </tr>

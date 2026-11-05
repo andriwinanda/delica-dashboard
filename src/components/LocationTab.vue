@@ -34,11 +34,11 @@ export default defineComponent({
       <h2 class="text-2xl font-bold">Locations</h2>
       <p class="text-sm text-gray-500">Kelola data locations.</p>
     </div>
-    <div class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div class="rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
       <dialog v-if="dialogOpen" open
         class="!fixed !inset-0 !z-50 !m-0 flex !h-screen !w-screen !max-h-none !max-w-none items-center justify-center bg-black/40 p-4"
         @click.self="dialogOpen = false" @keydown.esc="dialogOpen = false">
-        <div class="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
+        <div class="w-full max-w-3xl rounded-3xl bg-white p-4 sm:p-6 shadow-2xl">
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h3 class="text-xl font-semibold capitalize">{{ selectedLocation?.location || 'Location detail' }}</h3>
@@ -48,7 +48,7 @@ export default defineComponent({
           </div>
           <p v-if="detailLoading" class="py-8 text-center text-sm text-gray-400">Memuat branches...</p>
           <div v-else-if="selectedLocation?.branches?.length" class="overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
+            <table class="responsive-table min-w-full text-left text-sm">
               <thead>
                 <tr class="border-b text-xs uppercase text-gray-500">
                   <th class="px-3 py-3">Name</th>
@@ -60,10 +60,10 @@ export default defineComponent({
               <tbody>
                 <tr v-for="(branch, index) in selectedLocation.branches" :key="branchKey(branch, index)"
                   class="border-b border-gray-100">
-                  <td class="px-3 py-3">{{ branch.name }}</td>
-                  <td class="px-3 py-3">{{ branch.code }}</td>
-                  <td class="px-3 py-3 capitalize">{{ branch.city || '-' }}</td>
-                  <td class="px-3 py-3"><span :class="branch.isActive ? 'text-green-600' : 'text-gray-400'">{{
+                  <td data-label="Name" class="px-3 py-3">{{ branch.name }}</td>
+                  <td data-label="Code" class="px-3 py-3">{{ branch.code }}</td>
+                  <td data-label="City" class="px-3 py-3 capitalize">{{ branch.city || '-' }}</td>
+                  <td data-label="Status" class="px-3 py-3"><span :class="branch.isActive ? 'text-green-600' : 'text-gray-400'">{{
                     branch.isActive ? 'Active' : 'Inactive' }}</span></td>
                 </tr>
               </tbody>
@@ -77,7 +77,7 @@ export default defineComponent({
           <RefreshCw :size="14" />Refresh
         </button></div>
       <div class="overflow-x-auto">
-        <table class="min-w-full text-left text-sm">
+        <table class="responsive-table min-w-full text-left text-sm">
           <thead>
             <tr class="border-b text-xs uppercase text-gray-500">
               <th class="px-3 py-3">Location</th>
@@ -87,9 +87,9 @@ export default defineComponent({
           </thead>
           <tbody>
             <tr v-for="item in locations" :key="item.idLocation" class="border-b border-gray-100">
-              <td class="px-3 py-3 capitalize">{{ item.location }}</td>
-              <td class="px-3 py-3">{{ item.description || '-' }}</td>
-              <td class="px-3 py-3"><button title="View branches" @click="showDetail(item)">
+              <td data-label="Location" class="px-3 py-3 capitalize">{{ item.location }}</td>
+              <td data-label="Description" class="px-3 py-3">{{ item.description || '-' }}</td>
+              <td data-label="Actions" class="px-3 py-3"><button title="View branches" @click="showDetail(item)">
                   <Eye :size="15" />
                 </button></td>
             </tr>
