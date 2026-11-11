@@ -246,10 +246,10 @@ export default defineComponent({
       const token = localStorage.getItem(AUTH_TOKEN_KEY)
       
       try {
-        // const notificationUrl = import.meta.env.DEV
-        //   ? '/api/lead-notification'
-        //   : 'https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id/webhook/sendnotif'
-        const notificationUrl = '/api/lead-notification'
+        const notificationUrl = import.meta.env.DEV
+          ? '/api/lead-notification'
+          : 'https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id/webhook/sendnotif'
+        // const notificationUrl = '/api/lead-notification'
         await axios.get(notificationUrl, {
           timeout: 15000,
           headers: {
