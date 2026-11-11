@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between mb-8">
+  <div class="flex items-center justify-between mb-8 page-height">
     <div>
       <h2 class="text-2xl font-bold">WhatsApp Messages</h2>
       <p class="text-sm text-gray-500">Status of automated WhatsApp messages.</p>

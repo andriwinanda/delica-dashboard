@@ -1,9 +1,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
+import axios from 'axios'
 import axiosHelper, { getApiErrorMessage } from '@/utils/axiosHelper'
+import { showErrorToast } from '@/utils/toast'
 import { getLeadsApiUrl } from '@/utils/env'
 import {
   CheckCircle2,
+  Bell,
   Clock3,
   ChevronDown,
   MapPin,
@@ -60,6 +63,7 @@ const createStatusState = (): StatusState => ({
 export default defineComponent({
   name: 'LeadsTab',
   components: {
+    Bell,
     CheckCircle2,
     Clock3,
     ChevronDown,
@@ -98,6 +102,8 @@ export default defineComponent({
       } as Record<LeadStatus, StatusState>,
       requestVersion: 0,
       error: '',
+      sendingNotification: false,
+      notificationMessage: '',
     }
   },
   computed: {
@@ -231,6 +237,24 @@ export default defineComponent({
       }
 
       return colors[color]
+    },
+    async sendNotification() {
+      if (this.sendingNotification) return
+
+      this.sendingNotification = true
+      this.notificationMessage = ''
+
+      try {
+        const notificationUrl = 'https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id/webhook/sendnotif'
+        await axios.get(notificationUrl, {
+          timeout: 15000
+        })
+        this.notificationMessage = 'Notification workflow started.'
+      } catch (error: unknown) {
+        showErrorToast(getApiErrorMessage(error, 'Failed to send notification.'))
+      } finally {
+        this.sendingNotification = false
+      }
     }
   }
 })
@@ -238,12 +262,12 @@ export default defineComponent({
 
 <template>
   <div class="space-y-6">
-
     <div class="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
       <div>
         <h2 class="text-2xl font-bold">Leads</h2>
         <p class="text-sm text-gray-500">Track leads by progress and branch.</p>
         <p v-if="error" class="mb-4 text-sm text-red-600">{{ error }}</p>
+        <p v-if="notificationMessage" role="status" class="text-sm text-emerald-700">{{ notificationMessage }}</p>
       </div>
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:flex">
         <div class="!relative">
@@ -275,6 +299,11 @@ export default defineComponent({
         <button @click="fetchLeads()" class="px-4 py-2 bg-black text-white rounded-md flex items-center gap-2">
           <RefreshCw :size="14" />
           Refresh
+        </button>
+        <button @click="sendNotification()" :disabled="sendingNotification" :aria-busy="sendingNotification"
+          class="px-4 py-2 bg-black text-white rounded-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <Bell :size="14" />
+          {{ sendingNotification ? 'Sending...' : 'Send Notification' }}
         </button>
 
       </div>

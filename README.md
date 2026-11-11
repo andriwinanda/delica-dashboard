@@ -18,6 +18,15 @@ Create a `.env` file in the project root with your n8n webhook URLs:
 
 ### 2. CORS Configuration
 
+The Leads tab sends notifications with GET to
+`https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id/webhook/sendnotif`.
+During local development, it uses the Vite route `/api/lead-notification`,
+which proxies the request to n8n to avoid browser CORS restrictions.
+Restart the development server after changing proxy configuration.
+Production builds call n8n directly, so the webhook response must allow the
+deployed dashboard origin with `Access-Control-Allow-Origin`, or hosting must
+provide a server-side proxy and the notification URL must point to that proxy.
+
 #### Development (Automatic)
 The Vite development server includes proxy configuration that automatically handles CORS issues. API calls are proxied through:
 - `/api/whatsapp` → `VITE_WHATSAPP_WEBHOOK_URL`
