@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios'
-import axiosHelper, { getApiErrorMessage } from '@/utils/axiosHelper'
+import axiosHelper, { AUTH_TOKEN_KEY, getApiErrorMessage } from '@/utils/axiosHelper'
 import { showErrorToast } from '@/utils/toast'
 import { getLeadsApiUrl } from '@/utils/env'
 import {
@@ -243,12 +243,20 @@ export default defineComponent({
 
       this.sendingNotification = true
       this.notificationMessage = ''
-
+      const token = localStorage.getItem(AUTH_TOKEN_KEY)
+      
       try {
-        const notificationUrl = 'https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id/webhook/sendnotif'
+        // const notificationUrl = import.meta.env.DEV
+        //   ? '/api/lead-notification'
+        //   : 'https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id/webhook/sendnotif'
+        const notificationUrl = '/api/lead-notification'
         await axios.get(notificationUrl, {
-          timeout: 15000
+          timeout: 15000,
+          headers: {
+            Authorization: token ? `Bearer ${token}` : ''
+          }
         })
+
         this.notificationMessage = 'Notification workflow started.'
       } catch (error: unknown) {
         showErrorToast(getApiErrorMessage(error, 'Failed to send notification.'))

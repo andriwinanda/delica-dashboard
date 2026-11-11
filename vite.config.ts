@@ -15,7 +15,13 @@ export default defineConfig(async ({ mode }) => {
       }
     },
     server: {
-      proxy: {}
+      proxy: {
+        '/api/lead-notification': {
+          target: 'https://n8n-nimq2yvrpyc6.jkt3.sumopod.my.id',
+          changeOrigin: true,
+          rewrite: () => '/webhook/sendnotif'
+        }
+      }
     }
   }
 })
